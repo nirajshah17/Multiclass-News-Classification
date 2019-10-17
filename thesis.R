@@ -22,7 +22,7 @@ repeat {
   index <- index + 1
   print(paste('Processing rows:', index * chunksize))
   
-  
+  #create split files
   outfile <- paste(index,".csv",sep="")
   write.csv(file=outfile, datachunk, row.names = F)
   
@@ -39,7 +39,20 @@ repeat {
 close(con)
 
 #replace blanks with NA
-data[data==""]<-NA
+d1 <- read.csv("1.csv", stringsAsFactors = F)
+d1[d1==""]<-NA
 
-sapply(data,function(x) sum(is.na(x)))
+#check for nulls
+sapply(d1,function(x) sum(is.na(x)))
 
+#remove irrelevant columns
+d1$source <- NULL
+d1$summary<- NULL
+d1$scraped_at <- NULL
+d1$inserted_at <- NULL 
+d1$updated_at <- NULL
+d1$tags <- NULL
+d1$meta_description <- NULL
+d1$keywords <- NULL
+d1$meta_keywords <- NULL
+d1$authors <- NULL 
