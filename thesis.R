@@ -52,7 +52,14 @@ d1$scraped_at <- NULL
 d1$inserted_at <- NULL 
 d1$updated_at <- NULL
 d1$tags <- NULL
-d1$meta_description <- NULL
-d1$keywords <- NULL
-d1$meta_keywords <- NULL
-d1$authors <- NULL 
+d1$url <- NULL
+d1$id <- NULL
+d1$title <- NULL 
+
+#remove rows where type and content are missing
+d1 <- d1[!(is.na(d1$type)),]
+d1 <- d1[!(is.na(d1$content)),]
+#check for nulls
+sapply(d1,function(x) sum(is.na(x)))
+
+write.csv(d1, file = "1cleaned.csv",row.names=FALSE)
