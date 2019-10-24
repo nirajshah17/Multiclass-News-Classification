@@ -54,7 +54,8 @@ d1$updated_at <- NULL
 d1$tags <- NULL
 d1$url <- NULL
 d1$id <- NULL
-d1$title <- NULL 
+d1$title <- NULL
+
 
 #remove rows where type and content are missing
 d1 <- d1[!(is.na(d1$type)),]
@@ -63,3 +64,18 @@ d1 <- d1[!(is.na(d1$content)),]
 sapply(d1,function(x) sum(is.na(x)))
 
 write.csv(d1, file = "1cleaned.csv",row.names=FALSE)
+
+d1 <- read.csv("1cleaned.csv", stringsAsFactors = F)
+
+str(d1)
+
+d2 <- d1
+
+#convert type to factors
+d2$type <- factor(d2$type,levels=c("fake", "satire", "bias", "conspiracy", "junksci","hate", "clickbait", "unreliable", "political", "reliable","rumor"))
+
+#check structure
+str(d2)
+
+#check for nulls
+sapply(d2,function(x) sum(is.na(x)))
