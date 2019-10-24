@@ -79,3 +79,21 @@ str(d2)
 
 #check for nulls
 sapply(d2,function(x) sum(is.na(x)))
+d2 <- d2[!(is.na(d2$type)),]
+
+table(d2$type)
+plot(table(d2$type))
+
+
+d3 <- d2
+
+#remove special characters
+d3$content <- gsub("[[:punct:]]", "", d3$content)
+d3$content <- gsub("â???T", "'", d3$content)
+
+# load text mining package
+require(tm)  
+
+vs <- VectorSource(d3$content) 
+corpus <- Corpus(vs)  # build corpus
+
