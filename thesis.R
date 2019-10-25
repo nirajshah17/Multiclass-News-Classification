@@ -11,10 +11,6 @@ chunksize <- 1000000
 con <- file(description = newsfile , open = "r")
 datachunk <- read.table(con, nrows = chunksize, header =  T , fill = T , sep = ",",quote = '"')
 
-
-#chunkSize <- 100000
-#con <- file(description = newsfile , open = "r")
-#data <- read.table(con, nrows = chunksize, header =  T , fill = T , sep = ",",quote = '"')
 counter <- 0
 actualcolnames <- names(datachunk)
 
@@ -95,5 +91,20 @@ d3$content <- gsub("â???T", "'", d3$content)
 require(tm)  
 
 vs <- VectorSource(d3$content) 
-corpus <- Corpus(vs)  # build corpus
+
+# build corpus
+corpus <- Corpus(vs)  
+
+# remove numbers
+corpus <- tm_map(corpus, removeNumbers)  
+
+# remove puntucations
+corpus <- tm_map(corpus, removePunctuation) 
+
+# remove  white spaces
+corpus <- tm_map(corpus, stripWhitespace)
+
+#remove stopwords
+corpus <- tm_map(documents, removeWords, stopwords('english')) 
+
 
