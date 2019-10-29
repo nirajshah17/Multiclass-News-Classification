@@ -34,8 +34,10 @@ repeat {
 }
 close(con)
 
-#replace blanks with NA
+
 d1 <- read.csv("1.csv", stringsAsFactors = F)
+
+#replace blanks with NA
 d1[d1==""]<-NA
 
 #check for nulls
@@ -85,12 +87,15 @@ d3 <- d2
 
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
-d3$content <- gsub("â???T", "'", d3$content)
+d3$content <- gsub("????????", "'", d3$content)
+
+dt1 <- d3[1:100000,]
 
 # load text mining package
 require(tm)  
 
-vs <- VectorSource(d3$content) 
+#vectorsource considers each element in the vector as a document
+vs <- VectorSource(dt1$content) 
 
 # build corpus
 corpus <- Corpus(vs)  
@@ -105,6 +110,7 @@ corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, stripWhitespace)
 
 #remove stopwords
-corpus <- tm_map(documents, removeWords, stopwords('english')) 
+corpus <- tm_map(corpus, removeWords, stopwords('english')) 
 
-
+# build document term matrix
+tdm <- DocumentTermMatrix(corpus) 
