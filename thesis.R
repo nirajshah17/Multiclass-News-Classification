@@ -138,3 +138,9 @@ testing <- tdm_df[-index, ]
 index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
 training_t <- tdm_df[index1, ] 
 valid_t <- tdm_df[-index1, ]
+
+# class instances in training data
+table(training_t$`dt1$type`)
+
+# class instances in testing data
+table(valid_t$`dt1$type`)
