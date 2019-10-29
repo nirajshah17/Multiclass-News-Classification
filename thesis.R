@@ -125,3 +125,11 @@ tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
 tdm_df <- as.matrix((tdm_dm > 0) + 0) 
 
 tdm_df <- as.data.frame(tdm_df)
+
+# append type class from original dataset
+tdm_df <- cbind(tdm_df, dt1$type) 
+
+#create training and testing datasets
+index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
+training <- tdm_df[index, ] 
+testing <- tdm_df[-index, ]
