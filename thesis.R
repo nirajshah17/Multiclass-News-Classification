@@ -133,3 +133,8 @@ tdm_df <- cbind(tdm_df, dt1$type)
 index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
 training <- tdm_df[index, ] 
 testing <- tdm_df[-index, ]
+
+#create training and validation datasets from training 
+index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
+training_t <- tdm_df[index1, ] 
+valid_t <- tdm_df[-index1, ]
