@@ -87,7 +87,7 @@ d3 <- d2
 
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
-d3$content <- gsub("????????", "'", d3$content)
+d3$content <- gsub("â???T", "'", d3$content)
 
 dt1 <- d3[1:100000,]
 
@@ -114,3 +114,14 @@ corpus <- tm_map(corpus, removeWords, stopwords('english'))
 
 # build document term matrix
 tdm <- DocumentTermMatrix(corpus) 
+
+# remove sparse terms
+tdm_sparse <- removeSparseTerms(tdm, 0.90) 
+
+# count matrix
+tdm_dm <- as.data.frame(as.matrix(tdm_sparse)) 
+
+# binary instance matrix
+tdm_df <- as.matrix((tdm_dm > 0) + 0) 
+
+tdm_df <- as.data.frame(tdm_df)
