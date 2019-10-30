@@ -79,11 +79,18 @@ str(d2)
 sapply(d2,function(x) sum(is.na(x)))
 d2 <- d2[!(is.na(d2$type)),]
 
+
 count_type <- table(d2$type)
+prop.table(count_type)
 barplot(count_type)
 
+#d2$textlength <- nchar(d2$content)
+#library(ggplot2)
+#ggplot(d2,aes(textlength, fill=type)) +  geom_histogram(binwidth = 15000)
+#d3 <- d2
 
-d3 <- d2
+library(lattice)
+histogram( ~textlength | type , data = d2)
 
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
