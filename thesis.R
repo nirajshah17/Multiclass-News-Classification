@@ -151,3 +151,5 @@ c50model <- C5.0(training_t$`dt1$type` ~., data=training_t, trials=10)
 summary(c50model)
 cFiftyPrediction <- predict(c50model, newdata = valid_t[, -271]) #remove type column while prediction
 
+#accuracy
+(cFiftyAccuracy <- 1- mean(cFiftyPrediction != valid_t$`dt1$type`)) #0.7326111
