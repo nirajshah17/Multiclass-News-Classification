@@ -153,3 +153,8 @@ cFiftyPrediction <- predict(c50model, newdata = valid_t[, -271]) #remove type co
 
 #accuracy
 (cFiftyAccuracy <- 1- mean(cFiftyPrediction != valid_t$`dt1$type`)) #0.7326111
+
+#confusion matrix
+library(caret)
+cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type`) 
+cMat
