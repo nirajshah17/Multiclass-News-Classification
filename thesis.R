@@ -79,15 +79,15 @@ str(d2)
 sapply(d2,function(x) sum(is.na(x)))
 d2 <- d2[!(is.na(d2$type)),]
 
-table(d2$type)
-plot(table(d2$type))
+count_type <- table(d2$type)
+barplot(count_type)
 
 
 d3 <- d2
 
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
-d3$content <- gsub("�???T", "'", d3$content)
+d3$content <- gsub("â€™", "'", d3$content)
 
 dt1 <- d3[1:100000,]
 
@@ -158,3 +158,6 @@ cFiftyPrediction <- predict(c50model, newdata = valid_t[, -271]) #remove type co
 library(caret)
 cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type`) 
 cMat
+
+
+
