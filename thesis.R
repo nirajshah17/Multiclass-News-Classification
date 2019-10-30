@@ -144,3 +144,10 @@ table(training_t$`dt1$type`)
 
 # class instances in testing data
 table(valid_t$`dt1$type`)
+
+library(C50) 
+#build model
+c50model <- C5.0(training_t$`dt1$type` ~., data=training_t, trials=10)
+summary(c50model)
+cFiftyPrediction <- predict(c50model, newdata = valid_t[, -271]) #remove type column while prediction
+
