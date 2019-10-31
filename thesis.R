@@ -84,17 +84,16 @@ count_type <- table(d2$type)
 prop.table(count_type)
 barplot(count_type)
 
-#d2$textlength <- nchar(d2$content)
+d2$textlength <- nchar(d2$content)
 #library(ggplot2)
 #ggplot(d2,aes(textlength, fill=type)) +  geom_histogram(binwidth = 15000)
-#d3 <- d2
+d3 <- d2
 
 library(lattice)
 histogram( ~textlength | type , data = d2)
-
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
-d3$content <- gsub("â€™", "'", d3$content)
+d3$content <- gsub("�???T", "'", d3$content)
 
 dt1 <- d3[1:100000,]
 
@@ -106,9 +105,15 @@ vs <- VectorSource(dt1$content)
 
 # build corpus
 corpus <- Corpus(vs)  
-
+print(corpus)
 # remove numbers
+#<<SimpleCorpus>>
+#Metadata:  corpus specific: 1, document level (indexed): 0
+#Content:  documents: 100000
+
 corpus <- tm_map(corpus, removeNumbers)  
+
+inspect(corpus[1:3])
 
 # remove puntucations
 corpus <- tm_map(corpus, removePunctuation) 
@@ -117,7 +122,10 @@ corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, stripWhitespace)
 
 #remove stopwords
-corpus <- tm_map(corpus, removeWords, stopwords('english')) 
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+
+#covert to lower
+corpus <- tm_map(corpus, tolower)
 
 # build document term matrix
 tdm <- DocumentTermMatrix(corpus) 
@@ -131,7 +139,7 @@ tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
 # binary instance matrix
 tdm_df <- as.matrix((tdm_dm > 0) + 0) 
 
-tdm_df <- as.data.frame(tdm_df)
+tdm_df <- as.data.frame(tdm_dm)
 
 # append type class from original dataset
 tdm_df <- cbind(tdm_df, dt1$type) 
@@ -159,8 +167,9 @@ summary(c50model)
 cFiftyPrediction <- predict(c50model, newdata = valid_t[, -271]) #remove type column while prediction
 
 #accuracy
-(cFiftyAccuracy <- 1- mean(cFiftyPrediction != valid_t$`dt1$type`)) #0.7326111
+#0.7326111 #0.7431389 - without binary instance matrix
 
+(cFiftyAccuracy <- 1- mean(cFiftyPrediction != valid_t$`dt1$type`))
 #confusion matrix
 library(caret)
 cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type`) 
