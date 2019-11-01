@@ -1,3 +1,10 @@
+library(tm)
+library(e1071)
+library(dplyr)
+library(caret)
+
+setwd("E:/data")
+options(scipen = 999)
 d1 <- read.csv("1cleaned.csv", stringsAsFactors = F)
 d2 <- d1
 
@@ -29,8 +36,6 @@ d3$content <- gsub("â€™", "'", d3$content)
 
 dt1 <- d3[1:50000,]
 
-# load text mining package
-require(tm)  
 
 #vectorsource considers each element in the vector as a document
 vs <- VectorSource(dt1$content) 
@@ -42,23 +47,23 @@ print(corpus)
 #<<SimpleCorpus>>
 #Metadata:  corpus specific: 1, document level (indexed): 0
 #Content:  documents: 100000
+corpus.clean <- corpus %>%
+  tm_map(content_transformer(tolower)) %>% 
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removeWords, stopwords(kind="en")) %>%
+  tm_map(stripWhitespace)
 
-#remove numbers
-corpus <- tm_map(corpus, removeNumbers)  
+dtm <- DocumentTermMatrix(corpus.clean)
+# Inspect the dtm
+inspect(dtm[40:50, 10:15])
+  
 
-inspect(corpus[1:3])
+df.train1 <- dt1[1:40000,]
+df.test1 <- dt1[40001:50000,]
 
-# remove puntucations
-corpus <- tm_map(corpus, removePunctuation) 
+df.train <- df[1:32000,]
+df.test <- df[32001:40000,]
 
-# remove unnecessary white spaces
-corpus <- tm_map(corpus, stripWhitespace)
-
-#remove stopwords
-corpus <- tm_map(corpus, removeWords, stopwords('english'))
-
-#covert to lower
-corpus <- tm_map(corpus, tolower)
-
-# build document term matrix
-tdm <- DocumentTermMatrix(corpus) 
+corpus.clean.train <- corpus.clean[1:32000,]
+corpus.clean.test <- corpus.clean[32001:40000,]
