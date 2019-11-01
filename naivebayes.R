@@ -23,13 +23,9 @@ count_type <- table(d2$type)
 prop.table(count_type)
 barplot(count_type)
 
-d2$textlength <- nchar(d2$content)
-#library(ggplot2)
-#ggplot(d2,aes(textlength, fill=type)) +  geom_histogram(binwidth = 15000)
 d3 <- d2
+d2 <- d2[,-5]
 
-library(lattice)
-histogram( ~textlength | type , data = d2)
 #remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
 d3$content <- gsub("â€™", "'", d3$content)
@@ -98,5 +94,11 @@ valid_t <- tdm_df[-index1, ]
 
 # Train the classifier
 system.time( classifier <- naiveBayes(training_t, training_t$`dt1$type`, laplace = 1) )
-system.time( pred <- predict(classifier, newdata = valid_t[, -364]) )
+system.time( pred <- predict(classifier, newdata = valid_t[, -302]) )
 (nbAccuracy <- 1- mean(pred != valid_t$`dt1$type`))
+cMat <- confusionMatrix(pred, valid_t$`dt1$type`) 
+cMat
+#Accuracy : 0.5435               
+#95% CI : (0.5362, 0.5508)     
+#No Information Rate : 0.4661               
+#P-Value [Acc > NIR] : < 0.00000000000000022
