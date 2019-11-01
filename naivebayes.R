@@ -54,16 +54,30 @@ corpus.clean <- corpus %>%
   tm_map(removeWords, stopwords(kind="en")) %>%
   tm_map(stripWhitespace)
 
-dtm <- DocumentTermMatrix(corpus.clean)
-# Inspect the dtm
-inspect(dtm[40:50, 10:15])
-  
+# build document term matrix
+tdm <- DocumentTermMatrix(corpus.clean)
 
-df.train1 <- dt1[1:40000,]
-df.test1 <- dt1[40001:50000,]
+# remove sparse terms
+tdm_sparse <- removeSparseTerms(tdm, 0.90) 
 
-df.train <- df[1:32000,]
-df.test <- df[32001:40000,]
+# count matrix
+tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
 
-corpus.clean.train <- corpus.clean[1:32000,]
-corpus.clean.test <- corpus.clean[32001:40000,]
+# append type class from original dataset
+tdm_df <- cbind(tdm_dm, dt1$type) 
+
+set.seed(1703)
+
+#create training and testing datasets
+index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
+training <- tdm_df[index, ] 
+testing <- tdm_df[-index, ]
+
+#create training and validation datasets from training 
+index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
+training_t <- tdm_df[index1, ] 
+valid_t <- tdm_df[-index1, ]
+
+# Train the classifier
+system.time( classifier <- naiveBayes(training_t, training_t$`dt1$type`, laplace = 1) )
+system.time( pred <- predict(classifier, newdata = valid_t[, -280]) )
