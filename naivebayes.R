@@ -47,24 +47,42 @@ print(corpus)
 #<<SimpleCorpus>>
 #Metadata:  corpus specific: 1, document level (indexed): 0
 #Content:  documents: 100000
-corpus.clean <- corpus %>%
-  tm_map(content_transformer(tolower)) %>% 
-  tm_map(removePunctuation) %>%
-  tm_map(removeNumbers) %>%
-  tm_map(removeWords, stopwords(kind="en")) %>%
-  tm_map(stripWhitespace)
+#remove numbers
+corpus <- tm_map(corpus, removeNumbers)  
 
+inspect(corpus[1:3])
+
+# remove puntucations
+corpus <- tm_map(corpus, removePunctuation) 
+
+# remove unnecessary white spaces
+corpus <- tm_map(corpus, stripWhitespace)
+
+#remove stopwords
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+
+#covert to lower
+corpus <- tm_map(corpus, tolower)
 # build document term matrix
-tdm <- DocumentTermMatrix(corpus.clean)
+tdm <- DocumentTermMatrix(corpus) 
 
 # remove sparse terms
 tdm_sparse <- removeSparseTerms(tdm, 0.90) 
 
 # count matrix
-tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
+tdm_dm <- as.data.frame(as.matrix(tdm_sparse)) 
 
+# binary instance matrix
+tdm_df <- as.matrix((tdm_dm > 0) + 0) 
+
+tdm_df <- ifelse(tdm_df[] > 0, "Yes", "No")
+#tdm_df[1:50000,] <- as.factor(tdm_df[1:50000,])
+
+tdm_df <- as.data.frame(tdm_df)
+ 
+str(tdm_df)
 # append type class from original dataset
-tdm_df <- cbind(tdm_dm, dt1$type) 
+tdm_df <- cbind(tdm_df, dt1$type)
 
 set.seed(1703)
 
@@ -80,4 +98,5 @@ valid_t <- tdm_df[-index1, ]
 
 # Train the classifier
 system.time( classifier <- naiveBayes(training_t, training_t$`dt1$type`, laplace = 1) )
-system.time( pred <- predict(classifier, newdata = valid_t[, -280]) )
+system.time( pred <- predict(classifier, newdata = valid_t[, -364]) )
+(nbAccuracy <- 1- mean(pred != valid_t$`dt1$type`))
