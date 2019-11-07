@@ -102,4 +102,11 @@ svm_predict <- predict(svm_model, newdata = valid_t[, -392]) #remove type column
 library(caret)
 cMat <- confusionMatrix(svm_predict, valid_t$`dt1$type`) 
 cMat
+#Overall Statistics
 
+#Accuracy : 0.735           
+#95% CI : (0.7203, 0.7494)
+#No Information Rate : 0.3828          
+#P-Value [Acc > NIR] : < 2.2e-16       
+
+#Kappa : 0.6098  
