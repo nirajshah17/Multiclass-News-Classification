@@ -1,4 +1,3 @@
-
 setwd("E:/data")
 options(scipen = 999)
 
@@ -47,7 +46,7 @@ sapply(d1,function(x) sum(is.na(x)))
 d1$source <- NULL
 d1$summary<- NULL
 d1$scraped_at <- NULL
-d1$inserted_at <- NULL 
+d1$inserted_at <- NULL
 d1$updated_at <- NULL
 d1$tags <- NULL
 d1$url <- NULL
@@ -86,14 +85,11 @@ count_type <- table(d2$type1)
 prop.table(count_type)
 barplot(count_type)
 
-d2$textlength <- nchar(d2$content)
+#d2$textlength <- nchar(d2$content)
 #library(ggplot2)
 #ggplot(d2,aes(textlength, fill=type)) +  geom_histogram(binwidth = 15000)
-d3 <- d2[1:100000,]
+d3 <- d2
 
-library(lattice)
-histogram( ~textlength | type , data = d2)
-#remove special characters
 d3$content <- gsub("[[:punct:]]", "", d3$content)
 d3$content <- gsub("â€™", "'", d3$content)
 
@@ -103,7 +99,7 @@ dt1 <- d3 #[1:50000,]
 require(tm)  
 
 #vectorsource considers each element in the vector as a document
-vs <- VectorSource(dt1$content) 
+vs <- VectorSource(dt1$content)
 
 # build corpus
 corpus <- Corpus(vs)  
@@ -111,7 +107,7 @@ print(corpus)
 # remove numbers
 #<<SimpleCorpus>>
 #Metadata:  corpus specific: 1, document level (indexed): 0
-#Content:  documents: 100000
+#Content:  documents: 895892
 
 #remove numbers
 corpus <- tm_map(corpus, removeNumbers)  
@@ -119,7 +115,7 @@ corpus <- tm_map(corpus, removeNumbers)
 inspect(corpus[1:3])
 
 # remove puntucations
-corpus <- tm_map(corpus, removePunctuation) 
+corpus <- tm_map(corpus, removePunctuation)
 
 # remove unnecessary white spaces
 corpus <- tm_map(corpus, stripWhitespace)
@@ -131,31 +127,27 @@ corpus <- tm_map(corpus, removeWords, stopwords('english'))
 corpus <- tm_map(corpus, tolower)
 
 # build document term matrix
-tdm <- DocumentTermMatrix(corpus) 
+tdm <- DocumentTermMatrix(corpus)
 
 # remove sparse terms
-tdm_sparse <- removeSparseTerms(tdm, 0.90) 
+tdm_sparse <- removeSparseTerms(tdm, 0.90)
 
 # count matrix
-tdm_dm <- as.data.frame(as.matrix(tdm_sparse)) 
-
-# binary instance matrix
-#tdm_df <- as.matrix((tdm_dm > 0) + 0) 
-
-#tdm_df <- as.data.frame(tdm_dm)
+tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
 
 # append type class from original dataset
-tdm_df <- cbind(tdm_dm, dt1$type1) 
+tdm_df <- cbind(tdm_dm, dt1$type1)
 
 #####################################################################
 #create training and testing datasets
+set.seed(18139108)
 index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
-training <- tdm_df[index, ] 
+training <- tdm_df[index, ]
 testing <- tdm_df[-index, ]
 
-#create training and validation datasets from training 
+#create training and validation datasets from training
 index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
-training_t <- tdm_df[index1, ] 
+training_t <- tdm_df[index1, ]
 valid_t <- tdm_df[-index1, ]
 
 # class instances in training data
@@ -164,18 +156,13 @@ table(training_t$`dt1$type1`)
 # class instances in testing data
 table(valid_t$`dt1$type1`)
 
-library(C50) 
+library(C50)
 #build model
 c50model <- C5.0(training_t$`dt1$type1` ~., data=training_t, trials=10)
 summary(c50model)
-cFiftyPrediction <- predict(c50model, newdata = valid_t[, -263]) #remove type column while prediction
-
-#accuracy
-#0.7326111 #0.7431389 - without binary instance matrix
+cFiftyPrediction <- predict(c50model, newdata = valid_t[, -236]) #remove type column while prediction
 
 #confusion matrix
 library(caret)
-cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type1`) 
-cMat #accuracy 82.02
-
-
+cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type1`)
+cMat #accuracy 82.19
