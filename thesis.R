@@ -166,3 +166,9 @@ cFiftyPrediction <- predict(c50model, newdata = valid_t[, -236]) #remove type co
 library(caret)
 cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type1`)
 cMat #accuracy 82.19
+
+#pickled model- save the model
+saveRDS(c50model, file = "c50model.rds")
+loadModel <- readRDS("c50model.rds")
+
+
