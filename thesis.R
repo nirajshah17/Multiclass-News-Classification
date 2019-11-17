@@ -190,3 +190,39 @@ count_type <- table(kaggle$type1)
 prop.table(count_type)
 barplot(count_type)
 
+k1 <- kaggle
+
+#k1$type1 <- gsub("[[:punct:]]", "", k1$text)
+
+#vectorsource considers each element in the vector as a document
+vs1 <- VectorSource(k1$text)
+
+# build corpus
+corpus <- Corpus(vs1)  
+print(corpus)
+
+#remove numbers
+corpus <- tm_map(corpus, removeNumbers)  
+
+# remove puntucations
+corpus <- tm_map(corpus, removePunctuation)
+
+# remove unnecessary white spaces
+corpus <- tm_map(corpus, stripWhitespace)
+
+#remove stopwords
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+
+#convert to lower
+corpus <- tm_map(corpus, tolower)
+
+# build document term matrix
+tdm1 <- DocumentTermMatrix(corpus)
+
+# remove sparse terms
+tdm_sparse1 <- removeSparseTerms(tdm1, 0.90)
+
+# count matrix
+tdm_dm1 <- as.data.frame(as.matrix(tdm_sparse1))
+
+
