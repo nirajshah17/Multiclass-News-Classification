@@ -171,4 +171,22 @@ cMat #accuracy 82.19
 saveRDS(c50model, file = "c50model.rds")
 loadModel <- readRDS("c50model.rds")
 
+#load kaggle data
+kaggle <- read.csv("train.csv", stringsAsFactors = F)
+
+kaggle$title <- NULL
+kaggle$author <- NULL
+kaggle$id <- NULL
+kaggle$type1 <- factor(kaggle$label,levels=c(0,1),
+                       labels=c("fake","true"))
+
+#check structure
+str(kaggle)
+
+#check for nulls
+sapply(kaggle,function(x) sum(is.na(x)))
+
+count_type <- table(kaggle$type1)
+prop.table(count_type)
+barplot(count_type)
 
