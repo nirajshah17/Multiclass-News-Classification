@@ -225,4 +225,15 @@ tdm_sparse1 <- removeSparseTerms(tdm1, 0.90)
 # count matrix
 tdm_dm1 <- as.data.frame(as.matrix(tdm_sparse1))
 
+#tdm_df <- as.data.frame(tdm_dm)
+
+# append type class from original dataset
+tdm_df1 <- cbind(tdm_dm1, k1$type1)
+
+kagglePrediction <- predict(c50model, newdata = tdm_dm1) #remove type column while prediction
+
+#confusion matrix
+library(caret)
+kag_cmat <- confusionMatrix(kagglePrediction, tdm_df1$`dt1$type1`)
+kag_cMat #accuracy 82.19
 
