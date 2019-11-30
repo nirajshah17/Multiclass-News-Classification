@@ -177,3 +177,27 @@ library(caret)
 cMat1<- confusionMatrix(svm_predict, testing$`d2$type`) 
 cMat1
 
+tdm_df <- tdm_df[,-274]
+tdm_df <- ifelse(tdm_df[] > 0, "Yes", "No")
+
+tdm_df <- as.data.frame(tdm_df)
+
+str(tdm_df)
+# append type class from original dataset
+tdm_df <- cbind(tdm_df, d2$type)
+
+set.seed(18139108)
+
+#create training and testing datasets
+index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
+training <- tdm_df[index, ] 
+testing <- tdm_df[-index, ]
+
+
+# Train the classifier
+system.time( classifier <- naiveBayes(training, training$`d2$type`, laplace = 1) )
+system.time( pred <- predict(classifier, newdata = testing[, -274]) )
+(nbAccuracy <- 1- mean(pred != testing$`d2$type`))  #0.5552
+cMat2 <- confusionMatrix(pred, testing$`d2$type`) 
+cMat2
+
