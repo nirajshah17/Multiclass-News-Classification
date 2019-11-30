@@ -1,3 +1,4 @@
+
 setwd("E:/data")
 options(scipen = 999)
 
@@ -46,7 +47,7 @@ sapply(d1,function(x) sum(is.na(x)))
 d1$source <- NULL
 d1$summary<- NULL
 d1$scraped_at <- NULL
-d1$inserted_at <- NULL
+d1$inserted_at <- NULL 
 d1$updated_at <- NULL
 d1$tags <- NULL
 d1$url <- NULL
@@ -64,176 +65,115 @@ write.csv(d1, file = "1cleaned.csv",row.names=FALSE)
 
 d2 <- read.csv("1cleaned.csv", stringsAsFactors = F)
 
-str(d2)
-
-
+d2 <- d2[1:100000,]
 #convert type to factors
 d2$type <- factor(d2$type,levels=c("fake", "satire", "bias", "conspiracy", "junksci","hate", "clickbait", "unreliable", "political", "reliable","rumor"))
 
-#compress to three factors
-d2$type1 <- factor(d2$type,levels=c("fake", "satire", "bias", "conspiracy", "junksci","hate", "clickbait", "unreliable", "political", "reliable","rumor"),
-                   labels=c("fake","fake","fake","fake","other","other","true","fake","true","true","other"))
 #check structure
 str(d2)
 
 #check for nulls
 sapply(d2,function(x) sum(is.na(x)))
+#remove nulls
 d2 <- d2[!(is.na(d2$type)),]
 
 
-count_type <- table(d2$type1)
+count_type <- table(d2$type)
+count_type
 prop.table(count_type)
 barplot(count_type)
 
-#d2$textlength <- nchar(d2$content)
-#library(ggplot2)
-#ggplot(d2,aes(textlength, fill=type)) +  geom_histogram(binwidth = 15000)
-d3 <- d2
+#remove special characters
+d2$content <- gsub("[[:punct:]]", "", d2$content)
+#sd2$content <- gsub("Ã¢â¬â¢", "'", d2$content)
 
-d3$content <- gsub("[[:punct:]]", "", d3$content)
-d3$content <- gsub("â€™", "'", d3$content)
-
-dt1 <- d3 #[1:50000,]
 
 # load text mining package
 require(tm)  
 
+
 #vectorsource considers each element in the vector as a document
-vs <- VectorSource(dt1$content)
+vs <- VectorSource(d2$content) 
 
 # build corpus
 corpus <- Corpus(vs)  
-print(corpus)
-# remove numbers
-#<<SimpleCorpus>>
-#Metadata:  corpus specific: 1, document level (indexed): 0
-#Content:  documents: 895892
 
-#remove numbers
+# remove numbers
 corpus <- tm_map(corpus, removeNumbers)  
 
-inspect(corpus[1:3])
-
 # remove puntucations
-corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removePunctuation) 
 
-# remove unnecessary white spaces
+# remove  white spaces
 corpus <- tm_map(corpus, stripWhitespace)
 
 #remove stopwords
-corpus <- tm_map(corpus, removeWords, stopwords('english'))
-
-#covert to lower
-corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, removeWords, stopwords('english')) 
 
 # build document term matrix
 tdm <- DocumentTermMatrix(corpus)
 
 # remove sparse terms
-tdm_sparse <- removeSparseTerms(tdm, 0.90)
+tdm <- removeSparseTerms(tdm, 0.90) 
 
 # count matrix
-tdm_dm <- as.data.frame(as.matrix(tdm_sparse))
+tdm_df <- as.data.frame(as.matrix(tdm)) 
+
+# binary instance matrix
+#tdm_df <- as.matrix((tdm_df > 0) + 0) 
+
+#tdm_df <- as.data.frame(tdm_df)
 
 # append type class from original dataset
-tdm_df <- cbind(tdm_dm, dt1$type1)
+tdm_df <- cbind(tdm_df, d2$type) 
 
-#####################################################################
-#create training and testing datasets
+#dimension of data
+dim(tdm_df)
+# 97811    274
+
+write.csv(tdm_df, file = "tdmdf100k.csv",row.names=FALSE)
+
 set.seed(18139108)
+#create training and testing datasets
 index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
-training <- tdm_df[index, ]
+training <- tdm_df[index, ] 
 testing <- tdm_df[-index, ]
 
-#create training and validation datasets from training
-index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
-training_t <- tdm_df[index1, ]
-valid_t <- tdm_df[-index1, ]
+#create training and validation datasets from training 
+#index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
+#training_t <- tdm_df[index1, ] 
+#valid_t <- tdm_df[-index1, ]
 
 # class instances in training data
-table(training_t$`dt1$type1`)
+table(training$`d2$type`)
 
 # class instances in testing data
-table(valid_t$`dt1$type1`)
+table(testing$`d2$type`)
 
-library(C50)
+library(C50) 
 #build model
-c50model <- C5.0(training_t$`dt1$type1` ~., data=training_t, trials=10)
+c5model <- C5.0(training$`d2$type` ~., data=training, trials=10)
 summary(c50model)
-cFiftyPrediction <- predict(c50model, newdata = valid_t[, -236]) #remove type column while prediction
+cFiftyPrediction <- predict(c5model, newdata = testing[, -274]) #remove type column while prediction
+
+#accuracy
+(cFiftyAccuracy <- 1- mean(cFiftyPrediction != testing$`d2$type`)) #0.8345
 
 #confusion matrix
 library(caret)
-cMat <- confusionMatrix(cFiftyPrediction, valid_t$`dt1$type1`)
-cMat #accuracy 82.19
+cMat <- confusionMatrix(cFiftyPrediction, testing$`d2$type`) 
+cMat
 
-#pickled model- save the model
-saveRDS(c50model, file = "c50model.rds")
-loadModel <- readRDS("c50model.rds")
+library(e1071)
+svm_model <- svm(training$`d2$type` ~., data=training)
+svm_predict <- predict(svm_model, newdata = testing[, -274]) #remove type column while prediction
 
-#load kaggle data
-kaggle <- read.csv("train.csv", stringsAsFactors = F)
 
-kaggle$title <- NULL
-kaggle$author <- NULL
-kaggle$id <- NULL
-kaggle$type1 <- factor(kaggle$label,levels=c(0,1),
-                       labels=c("fake","true"))
-
-#check structure
-str(kaggle)
-
-#check for nulls
-sapply(kaggle,function(x) sum(is.na(x)))
-
-count_type <- table(kaggle$type1)
-prop.table(count_type)
-barplot(count_type)
-
-k1 <- kaggle
-
-#k1$type1 <- gsub("[[:punct:]]", "", k1$text)
-
-#vectorsource considers each element in the vector as a document
-vs1 <- VectorSource(k1$text)
-
-# build corpus
-corpus <- Corpus(vs1)  
-print(corpus)
-
-#remove numbers
-corpus <- tm_map(corpus, removeNumbers)  
-
-# remove puntucations
-corpus <- tm_map(corpus, removePunctuation)
-
-# remove unnecessary white spaces
-corpus <- tm_map(corpus, stripWhitespace)
-
-#remove stopwords
-corpus <- tm_map(corpus, removeWords, stopwords('english'))
-
-#convert to lower
-corpus <- tm_map(corpus, tolower)
-
-# build document term matrix
-tdm1 <- DocumentTermMatrix(corpus)
-
-# remove sparse terms
-tdm_sparse1 <- removeSparseTerms(tdm1, 0.90)
-
-# count matrix
-tdm_dm1 <- as.data.frame(as.matrix(tdm_sparse1))
-
-#tdm_df <- as.data.frame(tdm_dm)
-
-# append type class from original dataset
-tdm_df1 <- cbind(tdm_dm1, k1$type1)
-
-kagglePrediction <- predict(c50model, newdata = tdm_dm1) #remove type column while prediction
+#accuracy
+(svmAccuracy <- 1- mean(svm_predict != testing$`d2$type`)) #0.7998
 
 #confusion matrix
 library(caret)
-kag_cmat <- confusionMatrix(kagglePrediction, tdm_df1$`dt1$type1`)
-kag_cMat #accuracy 82.19
+cMat1<- confusionMatrix(svm_predict, testing$`d2$type`) 
+cMat1
 
