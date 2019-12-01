@@ -37,11 +37,11 @@ close(con)
 
 d1 <- read.csv("1.csv", stringsAsFactors = F)
 
-#replace blanks with NA
-d1[d1==""]<-NA
-
 #check for nulls
 sapply(d1,function(x) sum(is.na(x)))
+
+#replace blanks with NA
+d1[d1==""]<-NA
 
 #remove irrelevant columns
 d1$source <- NULL
@@ -79,13 +79,17 @@ d2 <- d2[!(is.na(d2$type)),]
 
 
 count_type <- table(d2$type)
+count_type
+# fake     satire       bias     conspiracy   junksci      hate    clickbait  unreliable  political   reliable   rumor 
+
+#123876      14252     135196     109597      17402       3619      21614     133653     287481       6599       42603 
+
+
 prop.table(count_type)
 barplot(count_type)
 
 #remove special characters
 d2$content <- gsub("[[:punct:]]", "", d2$content)
-d2$content <- gsub("â€™", "'", d2$content)
-
 
 # load text mining package
 require(tm)  
@@ -109,8 +113,13 @@ corpus <- tm_map(corpus, stripWhitespace)
 #remove stopwords
 corpus <- tm_map(corpus, removeWords, stopwords('english')) 
 
+#covert to lower
+corpus <- tm_map(corpus, tolower)
+
 # build document term matrix
 tdm <- DocumentTermMatrix(corpus)
+tdm
+#<<DocumentTermMatrix (documents: 895892, terms: 2027163)>>
 
 # remove sparse terms
 tdm <- removeSparseTerms(tdm, 0.90) 
