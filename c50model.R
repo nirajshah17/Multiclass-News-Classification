@@ -1,68 +1,3 @@
-
-setwd("E:/data")
-options(scipen = 999)
-
-file.info('news.csv')$size / 2^30
-readLines('news.csv',n=28)
-
-newsfile <- 'news.csv'
-index <- 0
-chunksize <- 1000000
-con <- file(description = newsfile , open = "r")
-datachunk <- read.table(con, nrows = chunksize, header =  T , fill = T , sep = ",",quote = '"')
-
-counter <- 0
-actualcolnames <- names(datachunk)
-
-repeat {
-  index <- index + 1
-  print(paste('Processing rows:', index * chunksize))
-  
-  #create split files
-  outfile <- paste(index,".csv",sep="")
-  write.csv(file=outfile, datachunk, row.names = F)
-  
-  
-  if (nrow(datachunk) != chunksize){
-    print('Processed all files!')
-    break}
-  
-  datachunk <- read.table(con, nrows=chunksize, skip=0, header=FALSE, fill = TRUE, sep=",", quote = '"', col.names=actualcolnames)
-  
-  if (index > 10) break
-  
-}
-close(con)
-
-
-d1 <- read.csv("1.csv", stringsAsFactors = F)
-
-#check for nulls
-sapply(d1,function(x) sum(is.na(x)))
-
-#replace blanks with NA
-d1[d1==""]<-NA
-
-#remove irrelevant columns
-d1$source <- NULL
-d1$summary<- NULL
-d1$scraped_at <- NULL
-d1$inserted_at <- NULL 
-d1$updated_at <- NULL
-d1$tags <- NULL
-d1$url <- NULL
-d1$id <- NULL
-d1$title <- NULL
-
-
-#remove rows where type and content are missing
-d1 <- d1[!(is.na(d1$type)),]
-d1 <- d1[!(is.na(d1$content)),]
-#check for nulls
-sapply(d1,function(x) sum(is.na(x)))
-
-write.csv(d1, file = "1cleaned.csv",row.names=FALSE)
-
 d2 <- read.csv("1cleaned.csv", stringsAsFactors = F)
 
 
@@ -160,6 +95,8 @@ table(testing$`d2$type`)
 
 library(C50) 
 #build model
+
+#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave
 c5model <- C5.0(training$`d2$type` ~., data=training, trials=10)
 summary(c50model)
 cFiftyPrediction <- predict(c5model, newdata = testing[, -236]) #remove type column while prediction
@@ -175,3 +112,54 @@ cMat
 #pickled model- save the model
 saveRDS(c5model, file = "c5modelfinal.rds")
 loadModel <- readRDS("c5modelfinal.rds")
+
+################################   Convert to 3 classes  ###################################################################
+
+#compress to three factors
+d2$type1 <- factor(d2$type,levels=c("fake", "satire", "bias", "conspiracy", "junksci","hate", "clickbait", "unreliable", "political", "reliable","rumor"),
+                   labels=c("unreliable","unreliable","maybe_true","unreliable","unreliable","maybe_true","maybe_true","unreliable","maybe_true","reliable","maybe_true"))
+
+dt1<-d2
+
+#read document term matrix
+tdm_df <- read.csv("tdmdf.csv", stringsAsFactors = F)
+
+
+tdm_df <- cbind(tdm_df, dt1$type1) 
+
+#####################################################################
+#create training and testing datasets
+set.seed(18139108)
+index <- sample(1:nrow(tdm_df), nrow(tdm_df) * .80, replace=FALSE)
+training <- tdm_df[index, ] 
+testing <- tdm_df[-index, ]
+
+#create training and validation datasets from training 
+#index1 <- sample(1:nrow(training), nrow(training) * .80, replace=FALSE)
+#training_t <- tdm_df[index1, ] 
+#valid_t <- tdm_df[-index1, ]
+
+# class instances in training data
+table(training$`dt1$type1`)
+#unreliable maybe_true   reliable 
+#318785     392685       5243 
+
+# class instances in testing data
+table(testing$`dt1$type1`)
+#unreliable maybe_true   reliable 
+#79995      97828       1356 
+
+library(C50) 
+#build model
+c50_3model <- C5.0(training$`dt1$type1` ~., data=training, trials=10)
+summary(c50model)
+cFiftyPrediction_3 <- predict(c50_3model, newdata = testing[, -236]) #remove type column while prediction
+(cFiftyAccuracy_3 <- 1- mean(cFiftyPrediction_3 != testing$`dt1$type1`))
+#accuracy
+
+#confusion matrix
+library(caret)
+cMat_3 <- confusionMatrix(cFiftyPrediction_3, testing$`dt1$type1`) 
+cMat_3
+
+

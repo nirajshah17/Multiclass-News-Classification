@@ -2,8 +2,11 @@
 setwd("E:/data")
 options(scipen = 999)
 
+#file size and overview
 file.info('news.csv')$size / 2^30
 readLines('news.csv',n=28)
+
+#Attribution - adapted and modified from http://amunategui.github.io/dealing-with-large-files/
 
 newsfile <- 'news.csv'
 index <- 0
@@ -27,7 +30,8 @@ repeat {
     print('Processed all files!')
     break}
   
-  datachunk <- read.table(con, nrows=chunksize, skip=0, header=FALSE, fill = TRUE, sep=",", quote = '"', col.names=actualcolnames)
+  datachunk <- read.table(con, nrows=chunksize, skip=0, header=FALSE, fill = TRUE, 
+                          sep=",", quote = '"', col.names=actualcolnames)
   
   if (index > 10) break
   
@@ -85,7 +89,7 @@ barplot(count_type)
 
 #remove special characters
 d2$content <- gsub("[[:punct:]]", "", d2$content)
-#sd2$content <- gsub("Ã¢â¬â¢", "'", d2$content)
+#sd2$content <- gsub("â€™", "'", d2$content)
 
 
 # load text mining package
@@ -150,9 +154,10 @@ table(training$`d2$type`)
 # class instances in testing data
 table(testing$`d2$type`)
 
+#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave
 library(C50) 
 #build model
-c5model <- C5.0(training$`d2$type` ~., data=training, trials=10)
+system.time(c5model <- C5.0(training$`d2$type` ~., data=training, trials=10))
 summary(c50model)
 cFiftyPrediction <- predict(c5model, newdata = testing[, -274]) #remove type column while prediction
 
@@ -165,7 +170,7 @@ cMat <- confusionMatrix(cFiftyPrediction, testing$`d2$type`)
 cMat
 
 library(e1071)
-svm_model <- svm(training$`d2$type` ~., data=training)
+system.time(svm_model <- svm(training$`d2$type` ~., data=training))
 svm_predict <- predict(svm_model, newdata = testing[, -274]) #remove type column while prediction
 
 
@@ -196,7 +201,7 @@ testing <- tdm_df[-index, ]
 
 # Train the classifier
 system.time( classifier <- naiveBayes(training, training$`d2$type`, laplace = 1) )
-system.time( pred <- predict(classifier, newdata = testing[, -274]) )
+pred <- predict(classifier, newdata = testing[, -274]) 
 (nbAccuracy <- 1- mean(pred != testing$`d2$type`))  #0.5552
 cMat2 <- confusionMatrix(pred, testing$`d2$type`) 
 cMat2
