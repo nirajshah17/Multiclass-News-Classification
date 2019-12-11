@@ -102,6 +102,7 @@ vs <- VectorSource(d2$content)
 # build corpus
 corpus <- Corpus(vs)  
 
+#Adapted and modified from - https://www.youtube.com/watch?v=lRTerj8fdY0 - cleaning of text
 # remove numbers
 corpus <- tm_map(corpus, removeNumbers)  
 
@@ -154,7 +155,7 @@ table(training$`d2$type`)
 # class instances in testing data
 table(testing$`d2$type`)
 
-#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave
+#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave - C5.0 model
 library(C50) 
 #build model
 system.time(c5model <- C5.0(training$`d2$type` ~., data=training, trials=10))

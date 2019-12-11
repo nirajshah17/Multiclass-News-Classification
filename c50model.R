@@ -36,6 +36,7 @@ vs <- VectorSource(d2$content)
 # build corpus
 corpus <- Corpus(vs)  
 
+#Adapted and modified from - https://www.youtube.com/watch?v=lRTerj8fdY0 - cleaning of text
 # remove numbers
 corpus <- tm_map(corpus, removeNumbers)  
 
@@ -96,7 +97,7 @@ table(testing$`d2$type`)
 library(C50) 
 #build model
 
-#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave
+#Attribution- adapted and modified from Advanced Data Mining notes provided on Moodle by Mr.Noel Cosgrave C5-model
 c5model <- C5.0(training$`d2$type` ~., data=training, trials=10)
 summary(c50model)
 cFiftyPrediction <- predict(c5model, newdata = testing[, -236]) #remove type column while prediction
@@ -109,6 +110,8 @@ library(caret)
 cMat <- confusionMatrix(cFiftyPrediction, testing$`d2$type`) 
 cMat
 
+
+#Attribution- adapted and modified from https://stackoverflow.com/questions/32185176/how-to-save-machine-learning-models-in-r
 #pickled model- save the model
 saveRDS(c5model, file = "c5modelfinal.rds")
 loadModel <- readRDS("c5modelfinal.rds")
